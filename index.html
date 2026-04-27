@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patron Paneli</title>
+<style>
+:root {
+  --bg: #F0EFEC;
+  --surface: #FFFFFF;
+  --sidebar-bg: #17191E;
+  --border: rgba(0,0,0,0.08);
+  --border-md: rgba(0,0,0,0.13);
+  --text: #1A1A1A;
+  --text2: #555;
+  --text3: #999;
+  --green: #27ae60;
+  --red: #c0392b;
+  --r: 10px; --r-sm: 7px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; height: 100vh; overflow: hidden; display: flex; }
+
+/* ── SIDEBAR ── */
+.sidebar { width: 240px; background: var(--sidebar-bg); height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-logo { padding: 22px 20px 16px; border-bottom: 1px solid rgba(255,255,255,.07); }
+.logo-title { font-size: 11px; letter-spacing: 1.4px; color: rgba(255,255,255,.35); font-weight: 600; text-transform: uppercase; }
+.logo-week { font-size: 12px; color: rgba(255,255,255,.55); margin-top: 4px; }
+.co-list { flex: 1; overflow-y: auto; padding: 10px 10px 0; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent; }
+.co-list::-webkit-scrollbar { width: 4px; }
+.co-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+.co-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 8px; cursor: pointer; margin-bottom: 2px; transition: background .15s; }
+.co-item:hover { background: rgba(255,255,255,.06); }
+.co-item.active { background: rgba(255,255,255,.10); }
+.co-dot-s { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.co-item-info { flex: 1; min-width: 0; }
+.co-item-name { font-size: 13px; color: rgba(255,255,255,.85); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.co-item-sector { font-size: 11px; color: rgba(255,255,255,.35); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.co-item-pct { font-size: 11px; color: rgba(255,255,255,.4); flex-shrink: 0; font-weight: 500; }
+.co-item.active .co-item-pct { color: rgba(255,255,255,.7); }
+.co-prog { height: 2px; background: rgba(255,255,255,.1); border-radius: 1px; margin-top: 5px; overflow: hidden; }
+.co-prog-fill { height: 100%; border-radius: 1px; transition: width .3s; }
+.sidebar-nav { padding: 10px; border-top: 1px solid rgba(255,255,255,.07); }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; color: rgba(255,255,255,.5); transition: all .15s; margin-bottom: 2px; }
+.nav-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.8); }
+.nav-item.active { background: rgba(255,255,255,.1); color: rgba(255,255,255,.9); }
+.nav-icon { width: 18px; text-align: center; font-size: 14px; flex-shrink: 0; }
+
+/* ── MAIN ── */
+.main { flex: 1; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
+.main::-webkit-scrollbar { width: 6px; }
+.main::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 3px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px 14px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 10; }
+.topbar-title { font-size: 18px; font-weight: 600; }
+.topbar-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.pct-pill { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; background: var(--bg); font-size: 13px; }
+.pct-pill-bar { width: 80px; height: 4px; background: var(--border-md); border-radius: 2px; overflow: hidden; }
+.pct-pill-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+.page { padding: 24px 28px; }
+
+/* ── DASHBOARD ── */
+.dash-greeting { margin-bottom: 28px; }
+.dash-greeting h1 { font-size: 24px; font-weight: 700; color: var(--text); }
+.dash-greeting p { font-size: 13px; color: var(--text3); margin-top: 4px; }
+
+/* Overall stats row */
+.dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 32px; }
+.dash-stat { background: var(--surface); border-radius: var(--r); padding: 16px 20px; border: 1px solid var(--border); }
+.dash-stat-lbl { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.dash-stat-val { font-size: 30px; font-weight: 700; line-height: 1; }
+.dash-stat-sub { font-size: 11px; color: var(--text3); margin-top: 5px; }
+
+/* Company circles row */
+.dash-co-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 16px; }
+.dash-companies { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 36px; }
+
+.co-circle-card {
+  display: flex; flex-direction: column; align-items: center;
+  width: 148px; cursor: pointer; transition: transform .15s;
+}
+.co-circle-card:hover { transform: translateY(-3px); }
+
+/* SVG ring + logo area */
+.co-ring-wrap { position: relative; width: 116px; height: 116px; margin-bottom: 12px; }
+.co-ring-wrap svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
+.co-ring-bg { stroke: var(--border-md); fill: none; stroke-width: 4; }
+.co-ring-fill { fill: none; stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset .5s ease; }
+
+/* Avatar circle */
+.co-avatar {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 88px; height: 88px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; cursor: pointer;
+  background: var(--surface);
+  box-shadow: 0 2px 8px rgba(0,0,0,.10);
+  transition: box-shadow .15s;
+}
+.co-avatar:hover { box-shadow: 0 4px 16px rgba(0,0,0,.18); }
+.co-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.co-avatar-letters { font-size: 22px; font-weight: 700; letter-spacing: -1px; }
+.co-avatar-overlay {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s; cursor: pointer;
+}
+.co-avatar:hover .co-avatar-overlay { opacity: 1; }
+.co-avatar-overlay span { font-size: 11px; color: #fff; font-weight: 500; letter-spacing: .3px; }
+
+/* Small edit button shown when logo already set */
+.co-logo-edit-btn {
+  position: absolute; bottom: 4px; right: 4px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,.55); color: #fff;
+  font-size: 11px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0; transition: opacity .15s;
+  z-index: 2;
+}
+.co-ring-wrap:hover .co-logo-edit-btn { opacity: 1; }
+.co-file-input { display: none; }
+
+/* Card info */
+.co-circle-name { font-size: 13px; font-weight: 600; text-align: center; color: var(--text); margin-bottom: 2px; }
+.co-circle-sector { font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 6px; }
+.co-circle-pct { font-size: 12px; font-weight: 600; text-align: center; }
+
+/* Completion badge on ring */
+.co-done-badge {
+  position: absolute; top: 2px; right: 2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+
+/* Dashboard recent tasks */
+.dash-recent { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dash-recent-card { background: var(--surface); border-radius: var(--r); border: 1px solid var(--border); overflow: hidden; }
+.dash-recent-head { display: flex; align-items: center; gap: 9px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: #FAFAF8; }
+.dash-recent-name { font-size: 13px; font-weight: 600; }
+.dash-recent-stat { margin-left: auto; font-size: 11px; color: var(--text3); }
+.dash-task-row { display: flex; align-items: center; gap: 10px; padding: 9px 16px; border-bottom: 1px solid var(--border); }
+.dash-task-row:last-child { border-bottom: none; }
+.dash-task-row.done .dash-task-name { color: var(--text3); text-decoration: line-through; }
+.dash-task-name { flex: 1; font-size: 13px; }
+.dash-mini-chk { width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; border: 1.5px solid rgba(0,0,0,.18); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.dash-mini-chk.on { border-color: transparent; }
+.dash-mini-chk.on::after { content: ''; width: 3px; height: 7px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(45deg) translate(-1px,-1px); }
+
+/* ── TASKS ── */
+.tasks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.cat-card { background: var(--surface); border-radius: var(--r); border: 1px solid var(--border); overflow: hidden; }
+.cat-card-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: #FAFAF8; }
+.cat-card-name { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .6px; }
+.cat-card-acts { display: flex; gap: 4px; }
+.task-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background .1s; cursor: default; }
+.task-row:last-child { border-bottom: none; }
+.task-row:hover { background: #FAFAF8; }
+.task-row.done { background: #F8F8F6; }
+.chk { width: 18px; height: 18px; flex-shrink: 0; border-radius: 4px; border: 1.5px solid rgba(0,0,0,.2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.chk.on { border-color: transparent; }
+.chk.on::after { content: ''; width: 4px; height: 8px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(45deg) translate(-1px,-1px); }
+.task-txt { flex: 1; font-size: 13px; }
+.task-row.done .task-txt { color: var(--text3); text-decoration: line-through; }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 18px; padding: 0 3px; line-height: 1; opacity: 0; transition: opacity .1s; font-family: inherit; }
+.task-row:hover .del-btn { opacity: .6; }
+.del-btn:hover { color: var(--red) !important; opacity: 1 !important; }
+.empty-cat { padding: 14px 16px; font-size: 13px; color: var(--text3); }
+.inline-form { padding: 8px 12px; border-top: 1px solid var(--border); display: flex; gap: 6px; background: #FFFEF8; }
+
+/* ── BANKS ── */
+.banks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; align-items: start; }
+.bank-card { background: var(--surface); border-radius: var(--r); border: 1px solid var(--border); padding: 18px; }
+.bank-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.bank-name { font-size: 15px; font-weight: 600; }
+.bank-bal { font-size: 20px; font-weight: 700; }
+.bank-iban { font-size: 11px; color: var(--text3); font-family: monospace; margin-top: 2px; word-break: break-all; }
+.bank-notes { font-size: 12px; color: var(--text2); margin-top: 10px; padding: 8px 10px; background: var(--bg); border-radius: 6px; }
+.bank-acts { display: flex; gap: 8px; margin-top: 12px; }
+
+/* ── SUMMARY ── */
+.summary-top { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 24px; }
+.stat-box { background: var(--surface); border-radius: var(--r); padding: 16px 18px; border: 1px solid var(--border); }
+.stat-lbl { font-size: 11px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.stat-val { font-size: 28px; font-weight: 700; }
+.co-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); }
+.co-table th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid var(--border); background: #FAFAF8; }
+.co-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.co-table tr:last-child td { border-bottom: none; }
+.co-table tr:hover td { background: #FAFAF8; }
+.prog-bar { height: 4px; background: var(--border-md); border-radius: 2px; overflow: hidden; width: 120px; }
+.prog-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+
+/* ── ARCHIVE ── */
+.arc-week-block { margin-bottom: 10px; }
+.arc-week-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; cursor: pointer; background: var(--surface); border-radius: var(--r); border: 1px solid var(--border); user-select: none; transition: background .1s; }
+.arc-week-header:hover { background: #FAFAF8; }
+.arc-week-header.open { border-radius: var(--r) var(--r) 0 0; border-bottom-color: transparent; }
+.arc-week-title { font-size: 14px; font-weight: 600; }
+.arc-week-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.arc-week-right { display: flex; align-items: center; gap: 12px; }
+.arc-pct { font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+.arc-chevron { font-size: 11px; color: var(--text3); transition: transform .2s; display: inline-block; }
+.arc-chevron.open { transform: rotate(90deg); }
+.arc-body { display: none; background: var(--surface); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--r) var(--r); overflow: hidden; margin-bottom: 2px; }
+.arc-body.open { display: block; }
+.arc-co-section { border-bottom: 1px solid var(--border); }
+.arc-co-section:last-child { border-bottom: none; }
+.arc-co-head { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: #FAFAF8; border-bottom: 1px solid var(--border); }
+.arc-co-name { font-size: 13px; font-weight: 600; }
+.arc-co-stat { font-size: 11px; color: var(--text3); margin-left: auto; }
+.arc-cat-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .6px; padding: 8px 16px 3px; }
+.arc-task-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-top: 1px solid var(--border); }
+.arc-chk { width: 15px; height: 15px; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.arc-chk.on::after { content: ''; width: 3px; height: 7px; border-right: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(45deg) translate(-1px,-1px); display: block; }
+.arc-task-name { flex: 1; font-size: 13px; }
+.arc-task-name.done { color: var(--text3); text-decoration: line-through; }
+.arc-task-name.skip { color: #bbb; }
+.arc-task-status { font-size: 11px; flex-shrink: 0; }
+
+/* INPUTS / BUTTONS */
+input, textarea { width: 100%; padding: 8px 11px; border: 1px solid var(--border-md); border-radius: var(--r-sm); font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); outline: none; transition: border-color .15s, background .15s; }
+input:focus, textarea:focus { border-color: #888; background: #fff; }
+textarea { resize: none; }
+.btn { padding: 7px 14px; border: 1px solid var(--border-md); border-radius: var(--r-sm); background: var(--surface); color: var(--text); font-size: 12px; cursor: pointer; font-family: inherit; transition: background .1s; white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+.btn:hover { background: var(--bg); }
+.btn:active { transform: scale(.98); }
+.btn-p { background: #1B6FA8; color: #fff; border-color: transparent; }
+.btn-p:hover { opacity: .88; background: #1B6FA8; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.btn-danger { color: var(--red); }
+.btn-ghost { background: none; border-color: transparent; color: var(--text3); }
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-add { width: 100%; padding: 10px; text-align: center; font-size: 12px; border-style: dashed; background: transparent; color: var(--text3); margin-top: 2px; }
+.btn-add:hover { color: var(--text); background: rgba(0,0,0,.02); }
+.frow { display: flex; flex-direction: column; gap: 10px; }
+.frow-h { display: flex; gap: 10px; }
+.sec-title { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+.co-edit-bar { background: var(--surface); border-radius: var(--r); padding: 16px 18px; margin-bottom: 20px; border: 1px solid var(--border); border-left: 3px solid; }
+</style>
+</head>
+<body>
+<div class="sidebar" id="sidebar"></div>
+<div class="main"    id="main"></div>
+
+<script>
+'use strict';
+
+/* ── helpers ── */
+function getWeekKey(d) {
+  d = d ? new Date(d) : new Date();
+  const day = d.getDay() || 7;
+  const m = new Date(d); m.setDate(d.getDate() - day + 1); m.setHours(0,0,0,0);
+  const ys = new Date(m.getFullYear(), 0, 1);
+  const wn = Math.ceil(((m - ys) / 86400000 + 1) / 7);
+  return m.getFullYear() + '-W' + String(wn).padStart(2,'0');
+}
+function getWeekInfo(key) {
+  let d;
+  if (key) {
+    const yr = parseInt(key), w = parseInt(key.split('W')[1]);
+    d = new Date(yr, 0, 1 + (w - 1) * 7);
+    const day = d.getDay() || 7; d.setDate(d.getDate() - day + 1);
+  } else {
+    d = new Date(); const day = d.getDay() || 7;
+    d.setDate(d.getDate() - day + 1); d.setHours(0,0,0,0);
+  }
+  const s = new Date(d); s.setDate(d.getDate() + 6);
+  const ys = new Date(d.getFullYear(), 0, 1);
+  const wn = Math.ceil(((d - ys) / 86400000 + 1) / 7);
+  const f = dt => dt.toLocaleDateString('tr-TR', { day:'numeric', month:'long' });
+  const fShort = dt => dt.toLocaleDateString('tr-TR', { day:'numeric', month:'short' });
+  return { wn, range: f(d) + ' – ' + f(s), rangeShort: fShort(d) + ' – ' + fShort(s) };
+}
+function getHourGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Günaydın';
+  if (h < 18) return 'İyi günler';
+  return 'İyi akşamlar';
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let _id = 9000; const nid = () => ++_id;
+const COLORS = ['#1B6FA8','#0F7A5F','#8B3A6B','#B86910','#5B3E9A','#C0392B','#16A085','#8E44AD'];
+function initials(name) {
+  return name.trim().split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+function hexToRgb(hex) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+/* ── default data ── */
+function mkData() {
+  return {
+    weekKey: getWeekKey(),
+    companies: [
+      { id:1, name:'Şirket 1', sector:'', color:COLORS[0], logo:'', cats:[
+        { id:1, name:'Muhasebe', tasks:[{id:1,name:'Gelir-gider kontrolü',done:false},{id:2,name:'Fatura takibi',done:false}]},
+        { id:2, name:'Operasyon', tasks:[{id:3,name:'Ekip toplantısı',done:false}]},
+      ]},
+      { id:2, name:'Şirket 2', sector:'', color:COLORS[1], logo:'', cats:[
+        { id:1, name:'Satış', tasks:[{id:1,name:'Müşteri takibi',done:false},{id:2,name:'Teklif hazırla',done:false}]},
+      ]},
+      { id:3, name:'Şirket 3', sector:'', color:COLORS[2], logo:'', cats:[
+        { id:1, name:'Genel', tasks:[{id:1,name:'Haftalık rapor',done:false}]},
+      ]},
+      { id:4, name:'Şirket 4', sector:'', color:COLORS[3], logo:'', cats:[
+        { id:1, name:'Genel', tasks:[{id:1,name:'Haftalık rapor',done:false}]},
+      ]},
+      { id:5, name:'Şirket 5', sector:'', color:COLORS[4], logo:'', cats:[
+        { id:1, name:'Genel', tasks:[{id:1,name:'Haftalık rapor',done:false}]},
+      ]},
+    ],
+    banks: [
+      {id:1,name:'Ziraat Bankası',iban:'',balance:'',notes:''},
+      {id:2,name:'İş Bankası',   iban:'',balance:'',notes:''},
+    ],
+    archive: []
+  };
+}
+
+/* ── state ── */
+let D  = null;
+let UI = { tab:'dashboard', coIdx:0, editCo:false, addingCat:false, addingTask:null,
+           delCat:null, delCoConfirm:false, editBank:null, delBank:null, addingCo:false, arcOpen:{} };
+
+/* ── archive ── */
+function doArchive(d) {
+  const wi = getWeekInfo(d.weekKey);
+  const snap = {
+    weekKey: d.weekKey, weekLabel: 'Hafta ' + wi.wn,
+    wn: wi.wn, range: wi.range, savedAt: new Date().toISOString(),
+    companies: d.companies.map(co => ({
+      id:co.id, name:co.name, color:co.color, sector:co.sector,
+      cats: co.cats.map(cat => ({
+        id:cat.id, name:cat.name,
+        tasks: cat.tasks.map(t => ({ id:t.id, name:t.name, done:t.done }))
+      }))
+    }))
+  };
+  d.archive = (d.archive||[]).filter(a => a.weekKey !== d.weekKey);
+  d.archive.unshift(snap);
+}
+
+/* ── load / persist ── */
+function load() {
+  try {
+    const raw = localStorage.getItem('patron_arc_v3');
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (!d.archive) d.archive = [];
+      d.companies.forEach(c => { if (!c.logo) c.logo = ''; });
+      if (d.weekKey !== getWeekKey()) {
+        doArchive(d);
+        d.companies.forEach(c => c.cats.forEach(cat => cat.tasks.forEach(t => { t.done = false; })));
+        d.weekKey = getWeekKey();
+      }
+      return d;
+    }
+  } catch(e) {}
+  return mkData();
+}
+function persist() { try { localStorage.setItem('patron_arc_v3', JSON.stringify(D)); } catch(e) {} }
+function pct(co) {
+  const tot = co.cats.reduce((s,c) => s + c.tasks.length, 0);
+  const dn  = co.cats.reduce((s,c) => s + c.tasks.filter(t=>t.done).length, 0);
+  return { tot, dn, p: tot ? Math.round(dn/tot*100) : 0 };
+}
+function focus(id) { setTimeout(() => { const el=document.getElementById(id); if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}} },60); }
+
+/* ── RENDER ── */
+function render() { renderSidebar(); renderMain(); }
+
+function renderSidebar() {
+  const { wn } = getWeekInfo();
+  const allTot = D.companies.reduce((s,c)=>s+c.cats.reduce((s2,cat)=>s2+cat.tasks.length,0),0);
+  const allDn  = D.companies.reduce((s,c)=>s+c.cats.reduce((s2,cat)=>s2+cat.tasks.filter(t=>t.done).length,0),0);
+
+  const coItems = D.companies.map((c,i) => {
+    const cp = pct(c); const act = i===UI.coIdx && UI.tab==='tasks';
+    return `<div class="co-item ${act?'active':''}" onclick="goTasks(${i})">
+      <div class="co-dot-s" style="background:${c.color}"></div>
+      <div class="co-item-info">
+        <div class="co-item-name">${esc(c.name)}</div>
+        ${c.sector?`<div class="co-item-sector">${esc(c.sector)}</div>`:''}
+        ${cp.tot>0?`<div class="co-prog"><div class="co-prog-fill" style="width:${cp.p}%;background:${c.color}"></div></div>`:''}
+      </div>
+      <div class="co-item-pct">${cp.tot>0?cp.dn+'/'+cp.tot:''}</div>
+    </div>`;
+  }).join('');
+
+  const addCoHtml = UI.addingCo
+    ? `<div style="padding:6px 10px;display:flex;gap:6px">
+        <input id="inp-newco" placeholder="Şirket adı"
+          style="flex:1;padding:5px 8px;font-size:12px;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#fff"
+          onkeydown="if(event.key==='Enter')addCo()">
+        <button class="btn btn-sm btn-p" onclick="addCo()">Ekle</button>
+        <button class="btn btn-sm btn-ghost" onclick="set('addingCo',false)" style="color:rgba(255,255,255,.4)">✕</button>
+       </div>`
+    : `<div style="padding:8px 10px">
+        <button class="btn btn-sm" onclick="set('addingCo',true)"
+          style="width:100%;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.5);justify-content:center">
+          + Şirket Ekle
+        </button>
+       </div>`;
+
+  const navItems = [
+    {k:'dashboard', icon:'⊞', label:'Dashboard'},
+    {k:'tasks',     icon:'☑', label:'Görevler'},
+    {k:'banks',     icon:'◈', label:'Bankalar'},
+    {k:'archive',   icon:'◷', label:'Arşiv', badge: D.archive.length},
+    {k:'summary',   icon:'◎', label:'Özet'},
+  ];
+  const navHtml = navItems.map(n =>
+    `<div class="nav-item ${UI.tab===n.k?'active':''}" onclick="setTab('${n.k}')">
+      <span class="nav-icon">${n.icon}</span>
+      ${n.label}
+      ${n.badge?`<span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,.12);border-radius:10px;padding:1px 7px;color:rgba(255,255,255,.45)">${n.badge}</span>`:''}
+    </div>`
+  ).join('');
+
+  const { range } = getWeekInfo();
+  document.getElementById('sidebar').innerHTML = `
+    <div class="sidebar-logo">
+      <div class="logo-title">Patron Paneli</div>
+      <div class="logo-week">Hafta ${wn} &nbsp;·&nbsp; ${allDn}/${allTot} tamamlandı</div>
+    </div>
+    <div style="padding:10px 10px 4px">
+      <div style="font-size:10px;letter-spacing:.8px;color:rgba(255,255,255,.25);font-weight:600;text-transform:uppercase;padding:0 4px;margin-bottom:4px">Şirketler</div>
+    </div>
+    <div class="co-list">${coItems}</div>
+    ${addCoHtml}
+    <div class="sidebar-nav">${navHtml}</div>
+    <div style="padding:10px 14px 16px;font-size:10px;color:rgba(255,255,255,.18);letter-spacing:.4px">${range}</div>
+  `;
+}
+
+function renderMain() {
+  const co = D.companies[UI.coIdx] || D.companies[0];
+  const cp = pct(co);
+  let topTitle, topSub, topRight = '';
+
+  if (UI.tab==='dashboard') {
+    const {wn,rangeShort} = getWeekInfo();
+    topTitle = 'Dashboard';
+    topSub = `Hafta ${wn} &nbsp;·&nbsp; ${rangeShort}`;
+  } else if (UI.tab==='archive') {
+    topTitle = 'Haftalık Arşiv';
+    topSub = D.archive.length + ' hafta kayıtlı';
+  } else if (UI.tab==='banks') {
+    topTitle = 'Banka Hesapları';
+    topSub = D.banks.length + ' hesap';
+  } else if (UI.tab==='summary') {
+    const {wn} = getWeekInfo();
+    topTitle = 'Özet'; topSub = 'Hafta ' + wn;
+  } else {
+    topTitle = esc(co.name); topSub = (esc(co.sector)||'Sektör belirtilmemiş') + ` &nbsp;·&nbsp; ${co.cats.length} kategori &nbsp;·&nbsp; ${cp.tot} görev`;
+    topRight = (cp.tot>0 ? `<div class="pct-pill">
+        <span style="font-size:13px;font-weight:600;color:${cp.p===100?'#27ae60':'#555'}">${cp.p===100?'✓ Tamamlandı':'%'+cp.p}</span>
+        <div class="pct-pill-bar"><div class="pct-pill-fill" style="width:${cp.p}%;background:${co.color}"></div></div>
+        <span style="font-size:12px;color:#999">${cp.dn}/${cp.tot}</span>
+      </div>` : '')
+      + `<button class="btn" onclick="startEditCo()">✎ Düzenle</button>`;
+  }
+
+  const topColor = UI.tab==='tasks' ? co.color : '#1A1A1A';
+  const topbar = `<div class="topbar">
+    <div><div class="topbar-title" style="color:${topColor}">${topTitle}</div><div class="topbar-sub">${topSub}</div></div>
+    <div class="topbar-right">${topRight}</div>
+  </div>`;
+
+  let content = '';
+  if      (UI.tab==='dashboard') content = rDashboard();
+  else if (UI.tab==='tasks')     content = rTasks(co);
+  else if (UI.tab==='banks')     content = rBanks();
+  else if (UI.tab==='archive')   content = rArchive();
+  else                           content = rSummary();
+
+  document.getElementById('main').innerHTML = topbar + '<div class="page">' + content + '</div>';
+
+  // Bind file inputs after render
+  document.querySelectorAll('.co-file-input').forEach(inp => {
+    inp.addEventListener('change', function() {
+      const coId = parseInt(this.dataset.coid);
+      const file = this.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const co = D.companies.find(c => c.id === coId);
+        if (co) { co.logo = e.target.result; persist(); render(); }
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+}
+
+/* ── DASHBOARD ── */
+function rDashboard() {
+  const allTot = D.companies.reduce((s,c)=>s+c.cats.reduce((s2,cat)=>s2+cat.tasks.length,0),0);
+  const allDn  = D.companies.reduce((s,c)=>s+c.cats.reduce((s2,cat)=>s2+cat.tasks.filter(t=>t.done).length,0),0);
+  const allP   = allTot ? Math.round(allDn/allTot*100) : 0;
+  const todayStr = new Date().toLocaleDateString('tr-TR', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+  /* Top stats */
+  const statsHtml = [
+    { l:'Toplam Görev',   v: allTot,              sub: 'Bu hafta' },
+    { l:'Tamamlanan',     v: allDn,               sub: `%${allP} tamamlandı`, col: allDn>0 ? '#27ae60' : '' },
+    { l:'Kalan',          v: allTot - allDn,       sub: 'Yapılacak', col: allTot-allDn>0 ? '#e67e22' : '' },
+    { l:'Aktif Şirket',   v: D.companies.length,  sub: D.banks.length + ' banka hesabı' },
+  ].map(m => `<div class="dash-stat">
+    <div class="dash-stat-lbl">${m.l}</div>
+    <div class="dash-stat-val" style="${m.col?`color:${m.col}`:''}">${m.v}</div>
+    <div class="dash-stat-sub">${m.sub}</div>
+  </div>`).join('');
+
+  /* Progress bar */
+  const overallBar = `<div style="background:var(--surface);border-radius:var(--r);padding:16px 20px;border:1px solid var(--border);margin-bottom:32px;display:flex;align-items:center;gap:16px">
+    <div style="flex:1">
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+        <span style="font-size:12px;font-weight:600;color:var(--text2)">Bu Haftalık Genel İlerleme</span>
+        <span style="font-size:13px;font-weight:700;color:${allP===100?'var(--green)':'var(--text2)'}">${allP===100?'✓ Tümü Tamamlandı':'%'+allP}</span>
+      </div>
+      <div style="height:8px;background:var(--border-md);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${allP}%;background:${allP===100?'#27ae60':'#1B6FA8'};border-radius:4px;transition:width .5s ease"></div>
+      </div>
+    </div>
+  </div>`;
+
+  /* Company circles */
+  const R = 54, C = 58, CIRC = 2 * Math.PI * R;
+  const circles = D.companies.map((co, i) => {
+    const cp = pct(co);
+    const offset = CIRC - (cp.p / 100) * CIRC;
+    const avatarInner = co.logo
+      ? `<img src="${co.logo}" alt="${esc(co.name)}">`
+      : `<span class="co-avatar-letters" style="color:${co.color}">${initials(co.name)}</span>`;
+
+    const doneBadge = cp.p === 100
+      ? `<div class="co-done-badge">✓</div>` : '';
+
+    return `<div class="co-circle-card" onclick="goTasks(${i})">
+      <div class="co-ring-wrap">
+        <svg width="116" height="116" viewBox="0 0 116 116">
+          <circle class="co-ring-bg" cx="${C}" cy="${C}" r="${R}"/>
+          <circle class="co-ring-fill" cx="${C}" cy="${C}" r="${R}"
+            stroke="${co.color}"
+            stroke-dasharray="${CIRC}"
+            stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="co-avatar" style="background:rgba(${hexToRgb(co.color)},.07)">
+          ${avatarInner}
+          ${!co.logo
+            ? `<div class="co-avatar-overlay" onclick="event.stopPropagation(); document.getElementById('logo-inp-${co.id}').click()"><span>Logo Yükle</span></div>`
+            : ''
+          }
+        </div>
+        ${co.logo
+          ? `<div class="co-logo-edit-btn" onclick="event.stopPropagation(); document.getElementById('logo-inp-${co.id}').click()" title="Logoyu değiştir">✎</div>`
+          : ''
+        }
+        ${doneBadge}
+      </div>
+      <input type="file" accept="image/*" class="co-file-input" id="logo-inp-${co.id}" data-coid="${co.id}">
+      <div class="co-circle-name">${esc(co.name)}</div>
+      ${co.sector?`<div class="co-circle-sector">${esc(co.sector)}</div>`:`<div class="co-circle-sector" style="color:#ddd">—</div>`}
+      <div class="co-circle-pct" style="color:${cp.p===100?'var(--green)':cp.p>0?co.color:'var(--text3)'}">
+        ${cp.p===100?'✓ Tamamlandı':cp.tot>0?`${cp.dn} / ${cp.tot} görev`:'Görev yok'}
+      </div>
+    </div>`;
+  }).join('');
+
+  /* Mini task lists — show todos from all companies */
+  const recentCards = D.companies.map(co => {
+    const pending = co.cats.flatMap(cat => cat.tasks.filter(t => !t.done).map(t => ({...t, catId: cat.id})));
+    const done    = co.cats.flatMap(cat => cat.tasks.filter(t => t.done).map(t => ({...t, catId: cat.id})));
+    const shown   = [...pending.slice(0,3), ...done.slice(0,1)].slice(0,4);
+    if (!shown.length) return '';
+    const cp = pct(co);
+    const rows = shown.map(t => {
+      const cat = co.cats.find(c => c.tasks.some(tk => tk.id === t.id));
+      return `<div class="dash-task-row ${t.done?'done':''}">
+        <div class="dash-mini-chk ${t.done?'on':''}" style="${t.done?`background:${co.color}`:`border-color:${co.color}`}"
+          onclick="toggleTask(${co.id},${cat?.id},${t.id})"></div>
+        <span class="dash-task-name">${esc(t.name)}</span>
+      </div>`;
+    }).join('');
+    return `<div class="dash-recent-card">
+      <div class="dash-recent-head">
+        <div class="co-dot-s" style="background:${co.color}"></div>
+        <div class="dash-recent-name">${esc(co.name)}</div>
+        <div class="dash-recent-stat">${cp.dn}/${cp.tot}</div>
+      </div>
+      ${rows}
+      ${cp.tot>4?`<div style="padding:8px 16px;font-size:11px;color:var(--text3);text-align:center;border-top:1px solid var(--border);cursor:pointer" onclick="goTasks(${D.companies.indexOf(co)})">Tümünü gör →</div>`:''}
+    </div>`;
+  }).filter(Boolean);
+
+  const recentGrid = recentCards.length
+    ? `<div class="sec-title" style="margin-top:0">Bu Haftaki Görevler</div>
+       <div class="dash-recent">${recentCards.join('')}</div>` : '';
+
+  return `<div class="dash-greeting">
+    <h1>${getHourGreeting()} 👋</h1>
+    <p>${new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
+  </div>
+  <div class="dash-stats">${statsHtml}</div>
+  ${overallBar}
+  <div class="sec-title">Şirketler</div>
+  <div class="dash-companies">${circles}</div>
+  ${recentGrid}`;
+}
+
+/* ── TASKS ── */
+function rTasks(co) {
+  let editBar = '';
+  if (UI.editCo) {
+    editBar = `<div class="co-edit-bar" style="border-left-color:${co.color};margin-bottom:20px">
+      <div style="font-size:12px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Şirket Bilgileri</div>
+      <div class="frow-h">
+        <input id="inp-coname" value="${esc(co.name)}" placeholder="Şirket adı *" style="flex:1">
+        <input id="inp-cosec"  value="${esc(co.sector)}" placeholder="Sektör (İnşaat, Gıda, Tekstil…)" style="flex:2">
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-p" onclick="saveCo()">Kaydet</button>
+          <button class="btn" onclick="set('editCo',false)">İptal</button>
+          ${UI.delCoConfirm
+            ? `<button class="btn btn-danger" onclick="delCo()" style="border-color:#e74c3c;background:#fdecea">Evet, şirketi sil</button>
+               <button class="btn" onclick="set('delCoConfirm',false)">Vazgeç</button>`
+            : `<button class="btn btn-ghost" onclick="set('delCoConfirm',true)" style="color:#c0392b;border-color:#e9b3b3;margin-left:8px">🗑 Şirketi Sil</button>`}
+        </div>
+      </div>
+    </div>`;
+  }
+  const catsHtml = co.cats.map(cat => {
+    const delAct = UI.delCat===cat.id
+      ? `<button class="btn btn-sm btn-danger" onclick="delCat(${cat.id})">Evet, sil</button>
+         <button class="btn btn-sm" onclick="set('delCat',null)">İptal</button>`
+      : `<button class="btn btn-sm btn-ghost" onclick="set('delCat',${cat.id})" title="Sil">✕</button>`;
+    const rows = cat.tasks.map(t =>
+      `<div class="task-row ${t.done?'done':''}">
+        <div class="chk ${t.done?'on':''}" style="${t.done?`background:${co.color}`:`border-color:${co.color}`}" onclick="toggleTask(${co.id},${cat.id},${t.id})"></div>
+        <span class="task-txt">${esc(t.name)}</span>
+        <button class="del-btn" onclick="delTask(${co.id},${cat.id},${t.id})">×</button>
+      </div>`
+    ).join('');
+    const addRow = UI.addingTask===cat.id
+      ? `<div class="inline-form">
+          <input id="inp-newtask" placeholder="Görev adı…" style="flex:1" onkeydown="if(event.key==='Enter')addTask(${co.id},${cat.id})">
+          <button class="btn btn-p btn-sm" onclick="addTask(${co.id},${cat.id})">Ekle</button>
+          <button class="btn btn-sm" onclick="set('addingTask',null)">İptal</button>
+        </div>` : '';
+    return `<div class="cat-card">
+      <div class="cat-card-head">
+        <span class="cat-card-name">${esc(cat.name)}</span>
+        <div class="cat-card-acts">
+          <button class="btn btn-sm" onclick="startAddTask(${cat.id})" style="color:${co.color}">+ Görev</button>
+          ${delAct}
+        </div>
+      </div>
+      ${cat.tasks.length===0&&UI.addingTask!==cat.id?`<div class="empty-cat">Henüz görev yok</div>`:''}
+      ${rows}${addRow}
+    </div>`;
+  }).join('');
+  const addCatHtml = UI.addingCat
+    ? `<div style="background:#fff;border-radius:var(--r);padding:14px;border:1px solid var(--border)">
+        <div class="frow-h">
+          <input id="inp-newcat" placeholder="Kategori adı" style="flex:1" onkeydown="if(event.key==='Enter')addCat2()">
+          <button class="btn btn-p" onclick="addCat2()">Ekle</button>
+          <button class="btn" onclick="set('addingCat',false)">İptal</button>
+        </div>
+      </div>`
+    : `<button class="btn btn-add" onclick="set('addingCat',true)" style="border-color:${co.color}40;color:${co.color}">+ Kategori Ekle</button>`;
+  const grid = co.cats.length>0 ? `<div class="tasks-grid">${catsHtml}</div>`
+    : `<div style="text-align:center;padding:70px;color:var(--text3)">Henüz kategori yok — aşağıdan ekleyin.</div>`;
+  return editBar + grid + `<div style="margin-top:14px">${addCatHtml}</div>`;
+}
+
+/* ── ARCHIVE ── */
+function rArchive() {
+  if (!D.archive.length) {
+    return `<div style="text-align:center;padding:80px;color:var(--text3)">
+      <div style="font-size:40px;margin-bottom:16px">◷</div>
+      <div style="font-size:15px;font-weight:500;color:#888;margin-bottom:8px">Henüz arşiv yok</div>
+      <div style="font-size:13px;max-width:340px;margin:0 auto">Her hafta başı sistem önceki haftayı otomatik arşivler.</div>
+      <button class="btn btn-p" onclick="manualArchive()" style="margin-top:20px">↓ Bu Haftayı Şimdi Arşivle</button>
+    </div>`;
+  }
+  const manualBtn = `<div style="display:flex;justify-content:flex-end;margin-bottom:18px">
+    <button class="btn btn-p" onclick="manualArchive()">↓ Bu Haftayı Arşivle</button>
+  </div>`;
+  const weeks = D.archive.map(entry => {
+    const allTot = entry.companies.reduce((s,c)=>s+c.cats.reduce((s2,cat)=>s2+cat.tasks.length,0),0);
+    const allDn  = entry.companies.reduce((s,c)=>s+c.cats.reduce((s2,cat)=>s2+cat.tasks.filter(t=>t.done).length,0),0);
+    const p      = allTot ? Math.round(allDn/allTot*100) : 0;
+    const isOpen = !!UI.arcOpen[entry.weekKey];
+    const pColor = p===100?'#27ae60':p>=50?'#e67e22':'#c0392b';
+    const pBg    = p===100?'#e6f8ee':p>=50?'#fef3e2':'#fdecea';
+    const coSections = entry.companies.map(co => {
+      const coTot = co.cats.reduce((s,cat)=>s+cat.tasks.length,0);
+      const coDn  = co.cats.reduce((s,cat)=>s+cat.tasks.filter(t=>t.done).length,0);
+      const catBlocks = co.cats.map(cat => {
+        if (!cat.tasks.length) return '';
+        const rows = cat.tasks.map(t =>
+          `<div class="arc-task-row">
+            <div class="arc-chk ${t.done?'on':''}" style="background:${t.done?co.color:'transparent'};border:1.5px solid ${t.done?co.color:'#ddd'};border-radius:3px"></div>
+            <span class="arc-task-name ${t.done?'done':'skip'}">${esc(t.name)}</span>
+            <span class="arc-task-status" style="color:${t.done?'var(--green)':'#ccc'}">${t.done?'✓ Tamamlandı':'Yapılmadı'}</span>
+          </div>`
+        ).join('');
+        return `<div class="arc-cat-label">${esc(cat.name)}</div>${rows}`;
+      }).join('');
+      return `<div class="arc-co-section">
+        <div class="arc-co-head">
+          <div class="co-dot-s" style="background:${co.color}"></div>
+          <div class="arc-co-name">${esc(co.name)}</div>
+          ${co.sector?`<span style="font-size:11px;color:var(--text3);margin-left:6px">${esc(co.sector)}</span>`:''}
+          <div class="arc-co-stat">${coDn}/${coTot} tamamlandı</div>
+        </div>
+        ${catBlocks}
+      </div>`;
+    }).join('');
+    return `<div class="arc-week-block">
+      <div class="arc-week-header ${isOpen?'open':''}" onclick="toggleArc('${entry.weekKey}')">
+        <div>
+          <div class="arc-week-title">${esc(entry.weekLabel)} <span style="font-weight:400;color:var(--text3);font-size:13px">— ${esc(entry.range)}</span></div>
+          <div class="arc-week-sub">${allDn}/${allTot} görev &nbsp;·&nbsp; ${entry.companies.length} şirket</div>
+        </div>
+        <div class="arc-week-right">
+          <div style="display:flex;gap:4px">${entry.companies.map(c=>`<div style="width:7px;height:7px;border-radius:50%;background:${c.color}"></div>`).join('')}</div>
+          <span class="arc-pct" style="color:${pColor};background:${pBg}">%${p}</span>
+          <span class="arc-chevron ${isOpen?'open':''}">▶</span>
+        </div>
+      </div>
+      <div class="arc-body ${isOpen?'open':''}">${coSections}</div>
+    </div>`;
+  }).join('');
+  return manualBtn + weeks;
+}
+
+/* ── BANKS ── */
+function rBanks() {
+  const cards = D.banks.map(b => {
+    if (UI.editBank===b.id) return `<div class="bank-card">${bankForm(b)}</div>`;
+    const acts = UI.delBank===b.id
+      ? `<button class="btn btn-danger btn-sm" onclick="doDelBank(${b.id})">Evet, sil</button>
+         <button class="btn btn-sm" onclick="set('delBank',null)">İptal</button>`
+      : `<button class="btn btn-sm" onclick="startEditBank(${b.id})">✎ Düzenle</button>
+         <button class="btn btn-sm btn-ghost" onclick="set('delBank',${b.id})">Sil</button>`;
+    return `<div class="bank-card">
+      <div class="bank-card-head">
+        <div><div class="bank-name">${esc(b.name)}</div>${b.iban?`<div class="bank-iban">${esc(b.iban)}</div>`:''}</div>
+        ${b.balance?`<div class="bank-bal">${esc(b.balance)} ₺</div>`:'<div style="font-size:20px;color:#ccc">— ₺</div>'}
+      </div>
+      ${b.notes?`<div class="bank-notes">${esc(b.notes)}</div>`:''}
+      <div class="bank-acts">${acts}</div>
+    </div>`;
+  }).join('');
+  const add = UI.editBank==='new'
+    ? `<div class="bank-card">${bankForm(null)}</div>`
+    : `<button class="btn btn-add" onclick="startAddBank()">+ Banka / Hesap Ekle</button>`;
+  return `<div class="sec-title">Banka Hesapları</div><div class="banks-grid">${cards}</div><div style="max-width:300px;margin-top:4px">${add}</div>`;
+}
+function bankForm(b) {
+  const v=b||{name:'',iban:'',balance:'',notes:''};
+  const s=b?`saveBankEdit(${b.id})`:`saveNewBank()`;
+  return `<div class="frow">
+    <div class="frow-h">
+      <input id="bf-name" value="${esc(v.name)}" placeholder="Banka adı *" style="flex:1">
+      <input id="bf-balance" value="${esc(v.balance)}" placeholder="Bakiye (₺)" style="flex:1">
+    </div>
+    <input id="bf-iban" value="${esc(v.iban)}" placeholder="IBAN / Hesap numarası" style="font-family:monospace;font-size:12px">
+    <textarea id="bf-notes" rows="2" placeholder="Notlar, şube bilgisi, yetkili…">${esc(v.notes)}</textarea>
+    <div class="frow-h">
+      <button class="btn btn-p" onclick="${s}" style="flex:2">Kaydet</button>
+      <button class="btn" onclick="set('editBank',null)" style="flex:1">İptal</button>
+    </div>
+  </div>`;
+}
+
+/* ── SUMMARY ── */
+function rSummary() {
+  const {wn,range}=getWeekInfo();
+  const allTot=D.companies.reduce((s,c)=>s+c.cats.reduce((s2,cat)=>s2+cat.tasks.length,0),0);
+  const allDn =D.companies.reduce((s,c)=>s+c.cats.reduce((s2,cat)=>s2+cat.tasks.filter(t=>t.done).length,0),0);
+  const allP  =allTot?Math.round(allDn/allTot*100):0;
+  const stats=[{l:'Toplam Görev',v:allTot},{l:'Tamamlanan',v:allDn},{l:'Kalan',v:allTot-allDn},{l:'Tamamlanma',v:'%'+allP}]
+    .map(m=>`<div class="stat-box"><div class="stat-lbl">${m.l}</div><div class="stat-val">${m.v}</div></div>`).join('');
+  const rows=D.companies.map(co=>{
+    const cp=pct(co);
+    return `<tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${co.color};margin-right:8px;vertical-align:middle"></span><strong>${esc(co.name)}</strong></td>
+      <td style="color:var(--text3)">${esc(co.sector)||'—'}</td>
+      <td>${cp.tot}</td><td style="color:var(--green)">${cp.dn}</td>
+      <td style="color:${cp.tot-cp.dn>0?'#e67e22':'var(--text3)'}">${cp.tot-cp.dn}</td>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div class="prog-bar"><div class="prog-fill" style="width:${cp.p}%;background:${co.color}"></div></div>
+        <span style="font-size:13px;font-weight:600;color:${cp.p===100?'var(--green)':'var(--text2)'}">%${cp.p}</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const banks=D.banks.length?`
+    <div class="sec-title" style="margin-top:28px">Banka Hesapları</div>
+    <table class="co-table">
+      <thead><tr><th>Banka</th><th>IBAN</th><th>Bakiye</th><th>Not</th></tr></thead>
+      <tbody>${D.banks.map(b=>`<tr>
+        <td><strong>${esc(b.name)}</strong></td>
+        <td style="font-family:monospace;font-size:12px;color:var(--text3)">${b.iban?esc(b.iban):'—'}</td>
+        <td style="font-weight:700;font-size:15px">${b.balance?esc(b.balance)+' ₺':'—'}</td>
+        <td style="color:var(--text3);font-size:12px">${b.notes?esc(b.notes):'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`:'';
+  return `<div class="sec-title">Hafta ${wn} — ${range}</div>
+    <div class="summary-top">${stats}</div>
+    <div style="margin-bottom:20px"><div style="height:6px;background:var(--border-md);border-radius:3px;overflow:hidden">
+      <div style="height:100%;width:${allP}%;background:${allP===100?'var(--green)':'#1B6FA8'};border-radius:3px;transition:width .4s"></div>
+    </div></div>
+    <div class="sec-title">Şirket Bazında</div>
+    <table class="co-table">
+      <thead><tr><th>Şirket</th><th>Sektör</th><th>Toplam</th><th>Yapıldı</th><th>Kalan</th><th style="min-width:180px">İlerleme</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>${banks}`;
+}
+
+/* ── ACTIONS ── */
+function set(k,v)  { UI[k]=v; render(); }
+function setTab(t) { UI.tab=t; UI.editCo=false; UI.addingCat=false; UI.addingTask=null; render(); }
+function selCo(i)  { UI.coIdx=i; UI.editCo=false; UI.addingCat=false; UI.addingTask=null; UI.delCat=null; render(); }
+function goTasks(i){ UI.tab='tasks'; UI.coIdx=i; render(); }
+
+function toggleArc(key) { UI.arcOpen[key]=!UI.arcOpen[key]; render(); }
+function manualArchive() {
+  doArchive(D);
+  D.companies.forEach(c => c.cats.forEach(cat => cat.tasks.forEach(t => { t.done=false; })));
+  persist(); render();
+}
+
+function startEditCo() { UI.editCo=true; render(); focus('inp-coname'); }
+function saveCo() {
+  const name=(document.getElementById('inp-coname')||{}).value?.trim(); if(!name) return;
+  const co=D.companies[UI.coIdx]; co.name=name;
+  co.sector=(document.getElementById('inp-cosec')||{}).value?.trim()||'';
+  persist(); UI.editCo=false; render();
+}
+function toggleTask(coId,catId,taskId) {
+  const co=D.companies.find(c=>c.id===coId);
+  const cat=co?.cats.find(c=>c.id===catId);
+  const t=cat?.tasks.find(t=>t.id===taskId);
+  if(t){t.done=!t.done; persist(); render();}
+}
+function delTask(coId,catId,taskId) {
+  const co=D.companies.find(c=>c.id===coId);
+  const cat=co?.cats.find(c=>c.id===catId);
+  if(cat){cat.tasks=cat.tasks.filter(t=>t.id!==taskId); persist(); render();}
+}
+function startAddTask(catId) { UI.addingTask=catId; render(); focus('inp-newtask'); }
+function addTask(coId,catId) {
+  const el=document.getElementById('inp-newtask'); if(!el?.value.trim()) return;
+  const co=D.companies.find(c=>c.id===coId);
+  const cat=co?.cats.find(c=>c.id===catId);
+  if(cat) cat.tasks.push({id:nid(),name:el.value.trim(),done:false});
+  persist(); UI.addingTask=null; render();
+}
+function addCat2() {
+  const el=document.getElementById('inp-newcat'); if(!el?.value.trim()) return;
+  D.companies[UI.coIdx].cats.push({id:nid(),name:el.value.trim(),tasks:[]});
+  persist(); UI.addingCat=false; render();
+}
+function delCat(catId) {
+  const co=D.companies[UI.coIdx]; co.cats=co.cats.filter(c=>c.id!==catId);
+  persist(); UI.delCat=null; render();
+}
+function addCo() {
+  const el=document.getElementById('inp-newco'); if(!el?.value.trim()) return;
+  const idx=D.companies.length%COLORS.length;
+  D.companies.push({id:nid(),name:el.value.trim(),sector:'',color:COLORS[idx],logo:'',cats:[{id:nid(),name:'Genel',tasks:[]}]});
+  persist(); UI.coIdx=D.companies.length-1; UI.addingCo=false; render();
+}
+function delCo() {
+  if (D.companies.length <= 1) { alert('En az 1 şirket kalmalı.'); return; }
+  D.companies.splice(UI.coIdx, 1);
+  UI.coIdx = Math.min(UI.coIdx, D.companies.length - 1);
+  UI.editCo = false; UI.delCoConfirm = false;
+  persist(); render();
+}
+function startEditBank(id) { UI.editBank=id; render(); focus('bf-name'); }
+function startAddBank()    { UI.editBank='new'; render(); focus('bf-name'); }
+function _bf() { return {
+  name:(document.getElementById('bf-name')||{}).value?.trim()||'',
+  iban:(document.getElementById('bf-iban')||{}).value?.trim()||'',
+  balance:(document.getElementById('bf-balance')||{}).value?.trim()||'',
+  notes:(document.getElementById('bf-notes')||{}).value?.trim()||'',
+}; }
+function saveBankEdit(id) {
+  const f=_bf(); if(!f.name) return;
+  const b=D.banks.find(b=>b.id===id); if(b) Object.assign(b,f);
+  persist(); UI.editBank=null; render();
+}
+function saveNewBank() {
+  const f=_bf(); if(!f.name) return;
+  D.banks.push({id:nid(),...f});
+  persist(); UI.editBank=null; render();
+}
+function doDelBank(id) { D.banks=D.banks.filter(b=>b.id!==id); persist(); UI.delBank=null; render(); }
+
+/* ── INIT ── */
+D = load();
+persist();
+render();
+</script>
+</body>
+</html>
